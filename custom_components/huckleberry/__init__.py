@@ -482,32 +482,19 @@ class HuckleberryDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ChildReal
 
     async def _async_update_data(self) -> dict[str, ChildRealtimeData]:
         """Update data via library (fallback when listeners aren't active)."""
-        # If we have real-time data, return it
+        # If we have real-time data, return it (listeners populate sleep, feed, health, diaper)
         if self._realtime_data:
-            # Fetch growth data for all children and add to real-time data
-            for child in self.children:
-                child_uid = child["uid"]
-                growth = await self.hass.async_add_executor_job(
-                    self.api.get_growth_data, child_uid
-                )
-                # Add growth data to each child's data
-                if child_uid in self._realtime_data:
-                    self._realtime_data[child_uid]["growth_data"] = growth
-
             return dict(self._realtime_data)
 
         # Initial data structure - listeners will populate it
+        # Don't fetch growth data here - the health listener handles it
         data: dict[str, ChildRealtimeData] = {}
         for child in self.children:
             child_uid = child["uid"]
-            # Fetch growth data
-            growth = await self.hass.async_add_executor_job(
-                self.api.get_growth_data, child_uid
-            )
             data[child_uid] = {
                 "child": child,
                 "sleep_status": {},
-                "growth_data": growth,
+                # growth_data will be populated by health listener
             }
 
         return data
