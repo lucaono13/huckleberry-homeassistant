@@ -827,9 +827,10 @@ Follow [semver.org](https://semver.org/):
 1. Update `manifest.json`: `"version": "1.4.0"`
 2. Update `hacs.json`: `"version": "1.4.0"`
 3. Update project version: `uv version 1.4.0`
-4. Create git tag: `git tag v1.4.0`
-5. Update AGENTS.md version history
-5. Update README.md with changes
+4. Commit and push changes
+5. Create release: `gh release create v1.4.0 --title "v1.4.0" --notes "Release notes here"`
+6. Update AGENTS.md version history
+7. Update README.md with changes
 
 ## Additional Resources
 
