@@ -174,10 +174,6 @@ All services support device selector for easy automation creation.
 - Completes sleep and saves to history
 - Parameters: `device_id` (optional), `child_uid` (optional)
 
-**`huckleberry.stop_sleep`**:
-- Alias for complete_sleep
-- Parameters: `device_id` (optional), `child_uid` (optional)
-
 ### Feeding Services
 
 **`huckleberry.start_feeding`**:
@@ -235,13 +231,12 @@ All services support device selector for easy automation creation.
 
 Device actions appear in automation UI when selecting a device trigger/condition/action.
 
-### Sleep Actions (6)
+### Sleep Actions (5)
 1. `start_sleep` - Start sleep tracking
 2. `pause_sleep` - Pause sleep tracking
 3. `resume_sleep` - Resume sleep tracking
 4. `cancel_sleep` - Cancel sleep tracking
 5. `complete_sleep` - Complete sleep tracking
-6. `stop_sleep` - Stop sleep tracking (alias for complete)
 
 ### Feeding Actions (6)
 7. `start_feeding_left` - Start feeding on left side

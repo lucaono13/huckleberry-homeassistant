@@ -89,7 +89,7 @@ class HuckleberrySleepSwitch(CoordinatorEntity, SwitchEntity):  # pylint: disabl
         _LOGGER.info("Stopping sleep tracking for %s", self._child_name)
         try:
             await self.hass.async_add_executor_job(
-                self._api.stop_sleep, self._child_uid
+                self._api.complete_sleep, self._child_uid
             )
             # Real-time listener will update state automatically
         except Exception as err:
