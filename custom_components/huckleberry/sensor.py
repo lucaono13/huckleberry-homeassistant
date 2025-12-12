@@ -11,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .entity import HuckleberryBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,35 +100,16 @@ class HuckleberryChildrenSensor(CoordinatorEntity, SensorEntity):
         return self.coordinator.last_update_success
 
 
-class HuckleberryChildProfileSensor(CoordinatorEntity, SensorEntity):
+class HuckleberryChildProfileSensor(HuckleberryBaseEntity, SensorEntity):
     """Sensor showing individual child profile information."""
 
     _attr_icon = "mdi:account"
 
     def __init__(self, coordinator, child: dict[str, Any]) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-
-        self._child = child
-        self.child_uid = child["uid"]
-        self.child_name = child["name"]
-
-        self._attr_has_entity_name = True
+        super().__init__(coordinator, child)
         self._attr_name = None
         self._attr_unique_id = f"{self.child_uid}_profile"
-
-    @property
-    def device_info(self) -> dict[str, Any]:
-        """Return device information."""
-        device_info = {
-            "identifiers": {(DOMAIN, self.child_uid)},
-            "name": self.child_name,
-            "manufacturer": "Huckleberry",
-        }
-        # Add profile picture as configuration_url if available
-        if self._child.get("picture"):
-            device_info["configuration_url"] = self._child["picture"]
-        return device_info
 
     @property
     def native_value(self) -> str:
@@ -153,37 +135,17 @@ class HuckleberryChildProfileSensor(CoordinatorEntity, SensorEntity):
 
         return attrs
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
 
-
-class HuckleberryGrowthSensor(CoordinatorEntity, SensorEntity):
+class HuckleberryGrowthSensor(HuckleberryBaseEntity, SensorEntity):
     """Sensor showing child growth measurements."""
 
     _attr_icon = "mdi:human-male-height"
 
     def __init__(self, coordinator, child: dict[str, Any]) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-
-        self.child_uid = child["uid"]
-        self.child_name = child["name"]
-
-        self._attr_has_entity_name = True
+        super().__init__(coordinator, child)
         self._attr_name = "Growth"
         self._attr_unique_id = f"{self.child_uid}_growth"
-
-    @property
-    def device_info(self) -> dict[str, Any]:
-        """Return device information."""
-        device_info = {
-            "identifiers": {(DOMAIN, self.child_uid)},
-            "name": self.child_name,
-            "manufacturer": "Huckleberry",
-        }
-        return device_info
 
     @property
     def native_value(self) -> str | None:
@@ -242,36 +204,17 @@ class HuckleberryGrowthSensor(CoordinatorEntity, SensorEntity):
 
         return attrs
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
 
-
-class HuckleberryDiaperSensor(CoordinatorEntity, SensorEntity):
+class HuckleberryDiaperSensor(HuckleberryBaseEntity, SensorEntity):
     """Sensor showing last diaper change information."""
 
     _attr_icon = "mdi:baby"
 
     def __init__(self, coordinator, child: dict[str, Any]) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-
-        self.child_uid = child["uid"]
-        self.child_name = child["name"]
-
-        self._attr_has_entity_name = True
+        super().__init__(coordinator, child)
         self._attr_name = "Last Diaper"
         self._attr_unique_id = f"{self.child_uid}_last_diaper"
-
-    @property
-    def device_info(self) -> dict[str, Any]:
-        """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self.child_uid)},
-            "name": self.child_name,
-            "manufacturer": "Huckleberry",
-        }
 
     @property
     def native_value(self) -> str | None:
@@ -326,13 +269,8 @@ class HuckleberryDiaperSensor(CoordinatorEntity, SensorEntity):
 
         return attrs
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success
 
-
-class HuckleberrySleepSensor(CoordinatorEntity, SensorEntity):
+class HuckleberrySleepSensor(HuckleberryBaseEntity, SensorEntity):
     """Representation of a Huckleberry sleep sensor."""
 
     _attr_icon = "mdi:sleep"
@@ -341,24 +279,9 @@ class HuckleberrySleepSensor(CoordinatorEntity, SensorEntity):
 
     def __init__(self, coordinator, child: dict[str, Any]) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-
-        self._child = child
-        self.child_uid = child["uid"]
-        self.child_name = child["name"]
-
-        self._attr_has_entity_name = True
+        super().__init__(coordinator, child)
         self._attr_name = "Sleep status"
         self._attr_unique_id = f"{self.child_uid}_sleep_status"
-
-    @property
-    def device_info(self) -> dict[str, Any]:
-        """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self.child_uid)},
-            "name": self.child_name,
-            "manufacturer": "Huckleberry",
-        }
 
     @property
     def native_value(self) -> str:
@@ -428,14 +351,8 @@ class HuckleberrySleepSensor(CoordinatorEntity, SensorEntity):
 
         return attrs
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return (
-            self.coordinator.last_update_success
-            and self.child_uid in self.coordinator.data
-        )
-class HuckleberryFeedingSensor(CoordinatorEntity, SensorEntity):
+
+class HuckleberryFeedingSensor(HuckleberryBaseEntity, SensorEntity):
     """Representation of a Huckleberry feeding sensor."""
 
     _attr_icon = "mdi:baby-bottle"
@@ -444,24 +361,9 @@ class HuckleberryFeedingSensor(CoordinatorEntity, SensorEntity):
 
     def __init__(self, coordinator, child: dict[str, Any]) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-
-        self._child = child
-        self.child_uid = child["uid"]
-        self.child_name = child["name"]
-
-        self._attr_has_entity_name = True
+        super().__init__(coordinator, child)
         self._attr_name = "Feeding status"
         self._attr_unique_id = f"{self.child_uid}_feeding_status"
-
-    @property
-    def device_info(self) -> dict[str, Any]:
-        """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self.child_uid)},
-            "name": self.child_name,
-            "manufacturer": "Huckleberry",
-        }
 
     @property
     def native_value(self) -> str:
@@ -518,16 +420,8 @@ class HuckleberryFeedingSensor(CoordinatorEntity, SensorEntity):
 
         return attrs
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return (
-            self.coordinator.last_update_success
-            and self.child_uid in self.coordinator.data
-        )
 
-
-class HuckleberryLastFeedingSideSensor(CoordinatorEntity, SensorEntity):
+class HuckleberryLastFeedingSideSensor(HuckleberryBaseEntity, SensorEntity):
     """Sensor showing the last feeding side."""
 
     _attr_icon = "mdi:baby-bottle-outline"
@@ -536,24 +430,9 @@ class HuckleberryLastFeedingSideSensor(CoordinatorEntity, SensorEntity):
 
     def __init__(self, coordinator, child: dict[str, Any]) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-
-        self._child = child
-        self.child_uid = child["uid"]
-        self.child_name = child["name"]
-
-        self._attr_has_entity_name = True
+        super().__init__(coordinator, child)
         self._attr_name = "Last Feeding Side"
         self._attr_unique_id = f"{self.child_uid}_last_feeding_side"
-
-    @property
-    def device_info(self) -> dict[str, Any]:
-        """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self.child_uid)},
-            "name": self.child_name,
-            "manufacturer": "Huckleberry",
-        }
 
     @property
     def native_value(self) -> str:
@@ -596,15 +475,7 @@ class HuckleberryLastFeedingSideSensor(CoordinatorEntity, SensorEntity):
 
         return "Unknown"
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return (
-            self.coordinator.last_update_success
-            and self.child_uid in self.coordinator.data
-        )
-
-class HuckleberryPreviousSleepStartSensor(CoordinatorEntity, SensorEntity):
+class HuckleberryPreviousSleepStartSensor(HuckleberryBaseEntity, SensorEntity):
     """Sensor showing the start time of the previous sleep session."""
 
     _attr_icon = "mdi:sleep"
@@ -612,24 +483,9 @@ class HuckleberryPreviousSleepStartSensor(CoordinatorEntity, SensorEntity):
 
     def __init__(self, coordinator, child: dict[str, Any]) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-
-        self._child = child
-        self.child_uid = child["uid"]
-        self.child_name = child["name"]
-
-        self._attr_has_entity_name = True
+        super().__init__(coordinator, child)
         self._attr_name = "Previous Sleep Start"
         self._attr_unique_id = f"{self.child_uid}_previous_sleep_start"
-
-    @property
-    def device_info(self) -> dict[str, Any]:
-        """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self.child_uid)},
-            "name": self.child_name,
-            "manufacturer": "Huckleberry",
-        }
 
     @property
     def native_value(self):
@@ -675,15 +531,7 @@ class HuckleberryPreviousSleepStartSensor(CoordinatorEntity, SensorEntity):
 
         return attrs
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return (
-            self.coordinator.last_update_success
-            and self.child_uid in self.coordinator.data
-        )
-
-class HuckleberryPreviousSleepEndSensor(CoordinatorEntity, SensorEntity):
+class HuckleberryPreviousSleepEndSensor(HuckleberryBaseEntity, SensorEntity):
     """Sensor showing the end time of the previous sleep session."""
 
     _attr_icon = "mdi:sleep-off"
@@ -691,24 +539,9 @@ class HuckleberryPreviousSleepEndSensor(CoordinatorEntity, SensorEntity):
 
     def __init__(self, coordinator, child: dict[str, Any]) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-
-        self._child = child
-        self.child_uid = child["uid"]
-        self.child_name = child["name"]
-
-        self._attr_has_entity_name = True
+        super().__init__(coordinator, child)
         self._attr_name = "Previous Sleep End"
         self._attr_unique_id = f"{self.child_uid}_previous_sleep_end"
-
-    @property
-    def device_info(self) -> dict[str, Any]:
-        """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self.child_uid)},
-            "name": self.child_name,
-            "manufacturer": "Huckleberry",
-        }
 
     @property
     def native_value(self):
@@ -757,16 +590,8 @@ class HuckleberryPreviousSleepEndSensor(CoordinatorEntity, SensorEntity):
 
         return attrs
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return (
-            self.coordinator.last_update_success
-            and self.child_uid in self.coordinator.data
-        )
 
-
-class HuckleberryPreviousFeedSensor(CoordinatorEntity, SensorEntity):
+class HuckleberryPreviousFeedSensor(HuckleberryBaseEntity, SensorEntity):
     """Sensor showing the start time of the previous feeding session."""
 
     _attr_icon = "mdi:baby-bottle-outline"
@@ -774,24 +599,9 @@ class HuckleberryPreviousFeedSensor(CoordinatorEntity, SensorEntity):
 
     def __init__(self, coordinator, child: dict[str, Any]) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-
-        self._child = child
-        self.child_uid = child["uid"]
-        self.child_name = child["name"]
-
-        self._attr_has_entity_name = True
+        super().__init__(coordinator, child)
         self._attr_name = "Previous Feed Start"
         self._attr_unique_id = f"{self.child_uid}_previous_feed_start"
-
-    @property
-    def device_info(self) -> dict[str, Any]:
-        """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self.child_uid)},
-            "name": self.child_name,
-            "manufacturer": "Huckleberry",
-        }
 
     @property
     def native_value(self):
@@ -848,11 +658,4 @@ class HuckleberryPreviousFeedSensor(CoordinatorEntity, SensorEntity):
 
         return attrs
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return (
-            self.coordinator.last_update_success
-            and self.child_uid in self.coordinator.data
-        )
 

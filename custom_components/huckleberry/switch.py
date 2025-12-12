@@ -8,9 +8,9 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .entity import HuckleberryBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,49 +35,32 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class HuckleberrySleepSwitch(CoordinatorEntity, SwitchEntity):  # pylint: disable=abstract-method
+class HuckleberrySleepSwitch(HuckleberryBaseEntity, SwitchEntity):  # pylint: disable=abstract-method
     """Switch to start/stop sleep tracking."""
 
     def __init__(self, coordinator, api, child: dict) -> None:
         """Initialize the switch."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, child)
         self._api = api
-        self._child = child
-        self._child_uid = child["uid"]
-        self._child_name = child["name"]
-        self._attr_has_entity_name = True
         self._attr_name = "Sleep tracking"
-        self._attr_unique_id = f"{self._child_uid}_sleep_tracking"
+        self._attr_unique_id = f"{self.child_uid}_sleep_tracking"
         self._attr_icon = "mdi:sleep"
-
-    @property
-    def device_info(self) -> dict[str, Any]:
-        """Return device information."""
-        device_info = {
-            "identifiers": {(DOMAIN, self._child_uid)},
-            "name": self._child_name,
-            "manufacturer": "Huckleberry",
-        }
-        # Add profile picture as configuration_url if available
-        if self._child.get("picture"):
-            device_info["configuration_url"] = self._child["picture"]
-        return device_info
 
     @property
     def is_on(self) -> bool:
         """Return true if sleep tracking is active."""
-        if self.coordinator.data and self._child_uid in self.coordinator.data:
-            sleep_status = self.coordinator.data[self._child_uid].get("sleep_status", {})
+        if self.available:
+            sleep_status = self.coordinator.data[self.child_uid].get("sleep_status", {})
             timer = sleep_status.get("timer", {})
             return timer.get("active", False) and not timer.get("paused", False)
         return False
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start sleep tracking."""
-        _LOGGER.info("Starting sleep tracking for %s", self._child_name)
+        _LOGGER.info("Starting sleep tracking for %s", self.child_name)
         try:
             await self.hass.async_add_executor_job(
-                self._api.start_sleep, self._child_uid
+                self._api.start_sleep, self.child_uid
             )
             # Real-time listener will update state automatically
         except Exception as err:
@@ -86,10 +69,10 @@ class HuckleberrySleepSwitch(CoordinatorEntity, SwitchEntity):  # pylint: disabl
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop sleep tracking."""
-        _LOGGER.info("Stopping sleep tracking for %s", self._child_name)
+        _LOGGER.info("Stopping sleep tracking for %s", self.child_name)
         try:
             await self.hass.async_add_executor_job(
-                self._api.complete_sleep, self._child_uid
+                self._api.complete_sleep, self.child_uid
             )
             # Real-time listener will update state automatically
         except Exception as err:
@@ -99,10 +82,10 @@ class HuckleberrySleepSwitch(CoordinatorEntity, SwitchEntity):  # pylint: disabl
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes."""
-        if not self.coordinator.data or self._child_uid not in self.coordinator.data:
+        if not self.available:
             return {}
 
-        sleep_status = self.coordinator.data[self._child_uid].get("sleep_status", {})
+        sleep_status = self.coordinator.data[self.child_uid].get("sleep_status", {})
         timer = sleep_status.get("timer", {})
 
         attrs = {}
@@ -120,40 +103,23 @@ class HuckleberrySleepSwitch(CoordinatorEntity, SwitchEntity):  # pylint: disabl
         return attrs
 
 
-class HuckleberryFeedingSwitch(CoordinatorEntity, SwitchEntity):  # pylint: disable=abstract-method
+class HuckleberryFeedingSwitch(HuckleberryBaseEntity, SwitchEntity):  # pylint: disable=abstract-method
     """Switch to start/stop breast feeding tracking for specific side."""
 
     def __init__(self, coordinator, api, child: dict, side: str) -> None:
         """Initialize the switch."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, child)
         self._api = api
-        self._child = child
-        self._child_uid = child["uid"]
-        self._child_name = child["name"]
         self._side = side
-        self._attr_has_entity_name = True
         self._attr_name = f"Feeding {side}"
-        self._attr_unique_id = f"{self._child_uid}_feeding_{side}"
+        self._attr_unique_id = f"{self.child_uid}_feeding_{side}"
         self._attr_icon = "mdi:baby-bottle" if side == "left" else "mdi:baby-bottle-outline"
-
-    @property
-    def device_info(self) -> dict[str, Any]:
-        """Return device information."""
-        device_info = {
-            "identifiers": {(DOMAIN, self._child_uid)},
-            "name": self._child_name,
-            "manufacturer": "Huckleberry",
-        }
-        # Add profile picture as configuration_url if available
-        if self._child.get("picture"):
-            device_info["configuration_url"] = self._child["picture"]
-        return device_info
 
     @property
     def is_on(self) -> bool:
         """Return true if feeding tracking is active on this side."""
-        if self.coordinator.data and self._child_uid in self.coordinator.data:
-            feed_status = self.coordinator.data[self._child_uid].get("feed_status", {})
+        if self.available:
+            feed_status = self.coordinator.data[self.child_uid].get("feed_status", {})
             timer = feed_status.get("timer", {})
 
             # Active if timer is active and activeSide matches this switch's side
@@ -165,10 +131,10 @@ class HuckleberryFeedingSwitch(CoordinatorEntity, SwitchEntity):  # pylint: disa
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start feeding tracking on this side."""
-        _LOGGER.info("Starting %s breast feeding for %s", self._side, self._child_name)
+        _LOGGER.info("Starting %s breast feeding for %s", self._side, self.child_name)
         try:
             await self.hass.async_add_executor_job(
-                self._api.start_feeding, self._child_uid, self._side
+                self._api.start_feeding, self.child_uid, self._side
             )
             # Real-time listener will update state automatically
         except Exception as err:
@@ -177,10 +143,10 @@ class HuckleberryFeedingSwitch(CoordinatorEntity, SwitchEntity):  # pylint: disa
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Complete feeding tracking and save to history."""
-        _LOGGER.info("Completing %s breast feeding for %s", self._side, self._child_name)
+        _LOGGER.info("Completing %s breast feeding for %s", self._side, self.child_name)
         try:
             await self.hass.async_add_executor_job(
-                self._api.complete_feeding, self._child_uid
+                self._api.complete_feeding, self.child_uid
             )
             # Real-time listener will update state automatically
         except Exception as err:
@@ -190,10 +156,10 @@ class HuckleberryFeedingSwitch(CoordinatorEntity, SwitchEntity):  # pylint: disa
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes."""
-        if not self.coordinator.data or self._child_uid not in self.coordinator.data:
+        if not self.available:
             return {}
 
-        feed_status = self.coordinator.data[self._child_uid].get("feed_status", {})
+        feed_status = self.coordinator.data[self.child_uid].get("feed_status", {})
         timer = feed_status.get("timer", {})
         prefs = feed_status.get("prefs", {})
 
