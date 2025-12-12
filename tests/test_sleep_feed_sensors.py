@@ -1,12 +1,12 @@
-"""Test Huckleberry binary sensors."""
+"""Test Huckleberry sleep and feeding sensors."""
 from unittest.mock import patch, MagicMock
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from custom_components.huckleberry.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-async def test_binary_sensors(hass: HomeAssistant, mock_huckleberry_api):
-    """Test binary sensors."""
+async def test_sleep_feed_sensors(hass: HomeAssistant, mock_huckleberry_api):
+    """Test sleep and feeding sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -37,7 +37,7 @@ async def test_binary_sensors(hass: HomeAssistant, mock_huckleberry_api):
     # Get the coordinator
     coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
 
-    # Simulate sleep data update
+    # Simulate sleep data update (Active)
     coordinator._realtime_data = {
         "child_1": {
             "sleep_status": {
@@ -54,24 +54,36 @@ async def test_binary_sensors(hass: HomeAssistant, mock_huckleberry_api):
     await hass.async_block_till_done()
 
     # Check sleep sensor
-    state = hass.states.get("binary_sensor.test_child_sleep_status")
+    state = hass.states.get("sensor.test_child_sleep_status")
     assert state is not None
-    assert state.state == "on"
+    assert state.state == "sleeping"
 
     # Check feeding sensor
-    state = hass.states.get("binary_sensor.test_child_feeding_status")
+    state = hass.states.get("sensor.test_child_feeding_status")
     assert state is not None
-    assert state.state == "on"
+    assert state.state == "feeding"
     assert state.attributes.get("last_side") == "left"
 
-    # Simulate awake and not feeding
+    # Simulate Paused
+    coordinator._realtime_data["child_1"]["sleep_status"]["timer"]["paused"] = True
+    coordinator._realtime_data["child_1"]["feed_status"]["timer"]["paused"] = True
+    coordinator.async_set_updated_data(coordinator._realtime_data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_child_sleep_status")
+    assert state.state == "paused"
+
+    state = hass.states.get("sensor.test_child_feeding_status")
+    assert state.state == "paused"
+
+    # Simulate Inactive (None)
     coordinator._realtime_data["child_1"]["sleep_status"]["timer"]["active"] = False
     coordinator._realtime_data["child_1"]["feed_status"]["timer"]["active"] = False
     coordinator.async_set_updated_data(coordinator._realtime_data)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.test_child_sleep_status")
-    assert state.state == "off"
+    state = hass.states.get("sensor.test_child_sleep_status")
+    assert state.state == "none"
 
-    state = hass.states.get("binary_sensor.test_child_feeding_status")
-    assert state.state == "off"
+    state = hass.states.get("sensor.test_child_feeding_status")
+    assert state.state == "none"

@@ -10,7 +10,7 @@ This integration provides real-time baby tracking in Home Assistant by connectin
 
 ## Features
 
-- 💤 **Sleep Tracking**: Binary sensors, switches, and automation actions
+- 💤 **Sleep Tracking**: Sensors, switches, and automation actions
 - 🍼 **Feeding Tracking**: Left/right side tracking with switches
 - 🧷 **Diaper Changes**: Log pee, poo, both, or dry checks
 - 📏 **Growth Measurements**: Track weight, height, head circumference
@@ -43,18 +43,16 @@ This integration provides real-time baby tracking in Home Assistant by connectin
 ## Entities Created
 
 ### Per Child:
-- **Binary Sensors** (2):
-  - `binary_sensor.{child_name}_sleep_status` - Sleep active/inactive
-  - `binary_sensor.{child_name}_feeding_status` - Feeding active/inactive
+- **Sensors** (4):
+  - `sensor.{child_name}_sleep_status` - Sleep status (sleeping, paused, none)
+  - `sensor.{child_name}_feeding_status` - Feeding status (feeding, paused, none)
+  - `sensor.{child_name}_profile` - Child profile information
+  - `sensor.{child_name}_growth` - Latest growth measurements
 
 - **Switches** (3):
   - `switch.{child_name}_sleep` - Start/stop sleep tracking
   - `switch.{child_name}_feeding_left` - Left side feeding
   - `switch.{child_name}_feeding_right` - Right side feeding
-
-- **Sensors** (2):
-  - `sensor.{child_name}_profile` - Child profile information
-  - `sensor.{child_name}_growth` - Latest growth measurements
 
 ### Global:
 - `sensor.huckleberry_children` - Number of children
@@ -97,8 +95,8 @@ automation:
   - alias: "Baby Sleep Started"
     trigger:
       - platform: state
-        entity_id: binary_sensor.baby_name_sleep_status
-        to: "on"
+        entity_id: sensor.baby_name_sleep_status
+        to: "sleeping"
     action:
       - service: notify.mobile_app
         data:
@@ -111,8 +109,8 @@ automation:
   - alias: "Feeding Duration Alert"
     trigger:
       - platform: state
-        entity_id: binary_sensor.baby_name_feeding_status
-        to: "on"
+        entity_id: sensor.baby_name_feeding_status
+        to: "feeding"
         for:
           minutes: 20
     action:

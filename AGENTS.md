@@ -28,9 +28,8 @@ This integration provides:
 - Real-time entity updates
 
 **Platforms:**
-- `binary_sensor`: Sleep and feeding status per child
 - `switch`: Sleep tracking + left/right feeding switches per child
-- `sensor`: Children count sensor + individual child profile sensors + growth sensor per child
+- `sensor`: Sleep/feeding status + Children count + child profile + growth sensors
 - `device_action`: 17 device-specific automation actions
 
 **External Dependencies:**
@@ -45,9 +44,8 @@ custom_components/huckleberry/
 ├── api.py                   # Legacy API (deprecated - will be removed)
 ├── config_flow.py           # Configuration UI flow
 ├── const.py                 # Constants (DOMAIN, PLATFORMS)
-├── binary_sensor.py         # Sleep + Feeding binary sensors (2 per child)
 ├── switch.py                # Sleep + Left/Right feeding switches (3 per child)
-├── sensor.py                # Profile + Growth sensors (2 per child) + Children count
+├── sensor.py                # Sleep/Feed status + Profile + Growth sensors (4 per child) + Children count
 ├── device_action.py         # 17 device actions for automations
 ├── services.yaml            # Service definitions with device selectors
 ├── manifest.json            # Integration metadata, dependencies
@@ -97,18 +95,18 @@ This groups entities under one device per child in HA UI.
 
 ## Entity Details
 
-### Binary Sensors (2 per child)
+### Sensors (4 per child)
 
-**`binary_sensor.{child_name}_sleep_status`**:
-- State: `on` (sleeping) / `off` (awake)
+**`sensor.{child_name}_sleep_status`**:
+- State: `sleeping`, `paused`, `none`
 - Attributes: `duration`, `paused`, `timer_start_time`
-- Device class: `occupancy`
+- Device class: `enum`
 - Updates: Real-time via sleep listener
 
-**`binary_sensor.{child_name}_feeding_status`**:
-- State: `on` (feeding) / `off` (not feeding)
+**`sensor.{child_name}_feeding_status`**:
+- State: `feeding`, `paused`, `none`
 - Attributes: `active_side`, `left_duration`, `right_duration`, `paused`, `timer_start_time`
-- Device class: `occupancy`
+- Device class: `enum`
 - Updates: Real-time via feed listener
 
 ### Switches (3 per child)
