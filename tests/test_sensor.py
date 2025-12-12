@@ -57,7 +57,7 @@ async def test_sensors(hass: HomeAssistant, mock_huckleberry_api):
     assert state.attributes["children"][0]["name"] == "Test Child"
 
     # Check child profile sensor
-    state = hass.states.get("sensor.test_child")
+    state = hass.states.get("sensor.test_child_profile")
     assert state.state == "Test Child"
     assert state.attributes["birthday"] == "2023-01-01"
 

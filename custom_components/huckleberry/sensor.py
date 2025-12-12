@@ -108,7 +108,7 @@ class HuckleberryChildProfileSensor(HuckleberryBaseEntity, SensorEntity):
     def __init__(self, coordinator, child: dict[str, Any]) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, child)
-        self._attr_name = None
+        self._attr_name = "Profile"
         self._attr_unique_id = f"{self.child_uid}_profile"
 
     @property

@@ -99,13 +99,13 @@ This groups entities under one device per child in HA UI.
 
 **`sensor.{child_name}_sleep_status`**:
 - State: `sleeping`, `paused`, `none`
-- Attributes: `duration`, `paused`, `timer_start_time`
+- Attributes: `is_paused`, `sleep_start`, `timer_start_time`, `last_sleep_start`, `last_sleep_duration_seconds`
 - Device class: `enum`
 - Updates: Real-time via sleep listener
 
 **`sensor.{child_name}_feeding_status`**:
 - State: `feeding`, `paused`, `none`
-- Attributes: `active_side`, `left_duration`, `right_duration`, `paused`, `timer_start_time`
+- Attributes: `is_paused`, `feeding_start`, `left_duration_seconds`, `right_duration_seconds`, `last_side`
 - Device class: `enum`
 - Updates: Real-time via feed listener
 
@@ -136,7 +136,7 @@ This groups entities under one device per child in HA UI.
 
 **`sensor.{child_name}_growth`**:
 - State: Last measurement timestamp (or "No measurements")
-- Attributes: `weight`, `weight_units`, `height`, `height_units`, `head`, `head_units`
+- Attributes: `weight`, `weight_unit`, `height`, `height_unit`, `head_circumference`, `head_unit`
 - Icon: `mdi:human-baby-changing-table`
 - Updates: Real-time via health listener
 
