@@ -51,8 +51,8 @@ Each child gets a dedicated device with 7 entities. The device includes the chil
      - `birthday`: Birth date (YYYY-MM-DD format)
      - `picture`: URL to profile picture (Firebase Storage)
 
-2. **Sleep Binary Sensor**: `binary_sensor.{child_name}_sleep_status`
-   - State: `on` when sleeping (active and not paused), `off` when awake
+2. **Sleep Sensor**: `sensor.{child_name}_sleep_status`
+   - State: `sleeping`, `paused`, or `none`
    - Attributes:
      - `is_paused`: Whether sleep is paused (when active)
      - `sleep_start`: Current sleep start time (if active)
@@ -67,8 +67,8 @@ Each child gets a dedicated device with 7 entities. The device includes the chil
      - `start_time`: When current sleep started
      - `last_sleep_duration_minutes`: Last sleep duration
 
-4. **Feeding Binary Sensor**: `binary_sensor.{child_name}_feeding_status`
-   - State: `on` when feeding (active on either side), `off` when not feeding
+4. **Feeding Sensor**: `sensor.{child_name}_feeding_status`
+   - State: `feeding`, `paused`, or `none`
    - Attributes:
      - `feeding_start`: Current feeding start time (if active)
      - `left_duration_seconds`: Accumulated left breast duration
@@ -76,7 +76,19 @@ Each child gets a dedicated device with 7 entities. The device includes the chil
      - `last_side`: Which side is currently active
      - `last_nursing_*`: Last completed feeding details
 
-5. **Feeding Left Switch**: `switch.{child_name}_feeding_left`
+5. **Last Feeding Side Sensor**: `sensor.{child_name}_last_feeding_side`
+   - State: `Left`, `Right`, or `Unknown`
+   - Shows current side if feeding, paused side if paused, or last side from history if stopped.
+
+6. **Previous Sleep End Sensor**: `sensor.{child_name}_previous_sleep_end`
+   - State: Timestamp of when the last sleep session ended.
+   - Device Class: `timestamp`
+
+7. **Previous Feed Start Sensor**: `sensor.{child_name}_previous_feed_start`
+   - State: Timestamp of when the last feeding session started.
+   - Device Class: `timestamp`
+
+8. **Feeding Left Switch**: `switch.{child_name}_feeding_left`
    - Turn ON: Starts feeding on left breast
    - Turn OFF: Completes and saves feeding
    - Attributes:
@@ -84,7 +96,7 @@ Each child gets a dedicated device with 7 entities. The device includes the chil
      - `duration_seconds`: Current session right duration
      - `feeding_start`: Session start time
 
-6. **Feeding Right Switch**: `switch.{child_name}_feeding_right`
+9. **Feeding Right Switch**: `switch.{child_name}_feeding_right`
    - Turn ON: Starts feeding on right breast
    - Turn OFF: Completes and saves feeding
    - Attributes:
@@ -92,7 +104,7 @@ Each child gets a dedicated device with 7 entities. The device includes the chil
      - `duration_seconds`: Current session right duration
      - `feeding_start`: Session start time
 
-7. **Growth Sensor**: `sensor.{child_name}_growth`
+10. **Growth Sensor**: `sensor.{child_name}_growth`
    - State: Last measurement timestamp (YYYY-MM-DD HH:MM) or "No data"
    - Attributes:
      - `weight`: Weight with units (e.g., "5.2 kg")

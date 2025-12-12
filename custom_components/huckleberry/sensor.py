@@ -38,6 +38,12 @@ async def async_setup_entry(
         entities.append(HuckleberrySleepSensor(coordinator, child))
         # Add feeding sensor for each child
         entities.append(HuckleberryFeedingSensor(coordinator, child))
+        # Add last feeding side sensor for each child
+        entities.append(HuckleberryLastFeedingSideSensor(coordinator, child))
+        # Add previous sleep sensor for each child
+        entities.append(HuckleberryPreviousSleepSensor(coordinator, child))
+        # Add previous feed sensor for each child
+        entities.append(HuckleberryPreviousFeedSensor(coordinator, child))
 
     async_add_entities(entities)
 
@@ -508,6 +514,258 @@ class HuckleberryFeedingSensor(CoordinatorEntity, SensorEntity):
                 attrs["last_nursing_duration_seconds"] = last_nursing.get("duration")
                 attrs["last_nursing_left_seconds"] = last_nursing.get("leftDuration", 0)
                 attrs["last_nursing_right_seconds"] = last_nursing.get("rightDuration", 0)
+
+        return attrs
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            self.coordinator.last_update_success
+            and self.child_uid in self.coordinator.data
+        )
+
+
+class HuckleberryLastFeedingSideSensor(CoordinatorEntity, SensorEntity):
+    """Sensor showing the last feeding side."""
+
+    _attr_icon = "mdi:baby-bottle-outline"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = ["Left", "Right", "Unknown"]
+
+    def __init__(self, coordinator, child: dict[str, Any]) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+
+        self._child = child
+        self.child_uid = child["uid"]
+        self.child_name = child["name"]
+
+        self._attr_has_entity_name = True
+        self._attr_name = "Last Feeding Side"
+        self._attr_unique_id = f"{self.child_uid}_last_feeding_side"
+
+    @property
+    def device_info(self) -> dict[str, Any]:
+        """Return device information."""
+        return {
+            "identifiers": {(DOMAIN, self.child_uid)},
+            "name": self.child_name,
+            "manufacturer": "Huckleberry",
+        }
+
+    @property
+    def native_value(self) -> str:
+        """Return the last feeding side."""
+        if self.child_uid not in self.coordinator.data:
+            return "Unknown"
+
+        feed_status = self.coordinator.data[self.child_uid].get("feed_status", {})
+        if not isinstance(feed_status, dict):
+            return "Unknown"
+
+        timer = feed_status.get("timer", {})
+        prefs = feed_status.get("prefs", {})
+
+        # If currently feeding (active)
+        if timer.get("active"):
+            # If activeSide is present (feeding), use it
+            active_side = timer.get("activeSide")
+            if active_side and active_side != "none":
+                return active_side.title()
+
+            # If paused, activeSide is removed, use lastSide from timer
+            # Note: pause_feeding sets timer.lastSide = current_side
+            last_side = timer.get("lastSide")
+            if last_side and last_side != "none":
+                return last_side.title()
+
+        # If not active, or fallback
+        # Check prefs.lastSide (history)
+        last_side_pref = prefs.get("lastSide", {})
+        if last_side_pref and "lastSide" in last_side_pref:
+            side = last_side_pref["lastSide"]
+            if side and side != "none":
+                return side.title()
+
+        # Fallback to timer.lastSide if prefs missing
+        last_side = timer.get("lastSide")
+        if last_side and last_side != "none":
+            return last_side.title()
+
+        return "Unknown"
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            self.coordinator.last_update_success
+            and self.child_uid in self.coordinator.data
+        )
+
+
+class HuckleberryPreviousSleepSensor(CoordinatorEntity, SensorEntity):
+    """Sensor showing the end time of the previous sleep session."""
+
+    _attr_icon = "mdi:sleep-off"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+
+    def __init__(self, coordinator, child: dict[str, Any]) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+
+        self._child = child
+        self.child_uid = child["uid"]
+        self.child_name = child["name"]
+
+        self._attr_has_entity_name = True
+        self._attr_name = "Previous Sleep End"
+        self._attr_unique_id = f"{self.child_uid}_previous_sleep_end"
+
+    @property
+    def device_info(self) -> dict[str, Any]:
+        """Return device information."""
+        return {
+            "identifiers": {(DOMAIN, self.child_uid)},
+            "name": self.child_name,
+            "manufacturer": "Huckleberry",
+        }
+
+    @property
+    def native_value(self):
+        """Return the end time of the last sleep."""
+        if self.child_uid not in self.coordinator.data:
+            return None
+
+        sleep_status = self.coordinator.data[self.child_uid].get("sleep_status", {})
+        if not isinstance(sleep_status, dict):
+            return None
+
+        prefs = sleep_status.get("prefs", {})
+        last_sleep = prefs.get("lastSleep", {})
+
+        start = last_sleep.get("start")
+        duration = last_sleep.get("duration")
+
+        if start is not None and duration is not None:
+            from datetime import datetime, timezone
+            # Timestamps are in seconds
+            end_timestamp = start + duration
+            return datetime.fromtimestamp(end_timestamp, tz=timezone.utc)
+
+        return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return entity specific state attributes."""
+        if self.child_uid not in self.coordinator.data:
+            return {}
+
+        sleep_status = self.coordinator.data[self.child_uid].get("sleep_status", {})
+        if not isinstance(sleep_status, dict):
+            return {}
+
+        prefs = sleep_status.get("prefs", {})
+        last_sleep = prefs.get("lastSleep", {})
+
+        attrs = {}
+        duration = last_sleep.get("duration")
+        if duration is not None:
+            attrs["duration_seconds"] = duration
+            hours = int(duration // 3600)
+            minutes = int((duration % 3600) // 60)
+            attrs["duration"] = f"{hours}h {minutes}m"
+
+        return attrs
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            self.coordinator.last_update_success
+            and self.child_uid in self.coordinator.data
+        )
+
+
+class HuckleberryPreviousFeedSensor(CoordinatorEntity, SensorEntity):
+    """Sensor showing the start time of the previous feeding session."""
+
+    _attr_icon = "mdi:baby-bottle-outline"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+
+    def __init__(self, coordinator, child: dict[str, Any]) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+
+        self._child = child
+        self.child_uid = child["uid"]
+        self.child_name = child["name"]
+
+        self._attr_has_entity_name = True
+        self._attr_name = "Previous Feed Start"
+        self._attr_unique_id = f"{self.child_uid}_previous_feed_start"
+
+    @property
+    def device_info(self) -> dict[str, Any]:
+        """Return device information."""
+        return {
+            "identifiers": {(DOMAIN, self.child_uid)},
+            "name": self.child_name,
+            "manufacturer": "Huckleberry",
+        }
+
+    @property
+    def native_value(self):
+        """Return the start time of the last feeding."""
+        if self.child_uid not in self.coordinator.data:
+            return None
+
+        feed_status = self.coordinator.data[self.child_uid].get("feed_status", {})
+        if not isinstance(feed_status, dict):
+            return None
+
+        prefs = feed_status.get("prefs", {})
+        last_nursing = prefs.get("lastNursing", {})
+
+        start = last_nursing.get("start")
+
+        if start is not None:
+            from datetime import datetime, timezone
+            return datetime.fromtimestamp(start, tz=timezone.utc)
+
+        return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return entity specific state attributes."""
+        if self.child_uid not in self.coordinator.data:
+            return {}
+
+        feed_status = self.coordinator.data[self.child_uid].get("feed_status", {})
+        if not isinstance(feed_status, dict):
+            return {}
+
+        prefs = feed_status.get("prefs", {})
+        last_nursing = prefs.get("lastNursing", {})
+        last_side_data = prefs.get("lastSide", {})
+
+        attrs = {}
+
+        duration = last_nursing.get("duration")
+        if duration is not None:
+            attrs["duration_seconds"] = duration
+
+        left_duration = last_nursing.get("leftDuration")
+        if left_duration is not None:
+            attrs["left_duration_seconds"] = left_duration
+
+        right_duration = last_nursing.get("rightDuration")
+        if right_duration is not None:
+            attrs["right_duration_seconds"] = right_duration
+
+        last_side = last_side_data.get("lastSide")
+        if last_side:
+            attrs["last_side"] = last_side
 
         return attrs
 
