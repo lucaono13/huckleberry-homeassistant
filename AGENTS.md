@@ -6,10 +6,15 @@ This is a **Home Assistant custom integration** for the Huckleberry baby trackin
 
 **Critical Context**: This integration wraps the `huckleberry-api` library and adapts it for Home Assistant's architecture. The API handles all Firebase operations, while this integration provides HA-specific features like entities, services, automations, and real-time updates through coordinators.
 
+## Related Documentation
+
+- **[Project Overview](../AGENTS.md)** - High-level context, history, decompiled source analysis
+- **[API Library](../huckleberry-api/AGENTS.md)** - Underlying Firebase operations and data structures
+
 ## Project Purpose
 
 This integration provides:
-- Home Assistant entities for baby tracking (sensors, switches, binary sensors)
+- Home Assistant entities for baby tracking (sensors, switches)
 - Services for controlling tracking from automations
 - Device actions for advanced automation scenarios
 - Real-time updates via coordinator and Firebase listeners
@@ -30,10 +35,10 @@ This integration provides:
 **Platforms:**
 - `switch`: Sleep tracking + left/right feeding switches per child
 - `sensor`: Sleep/feeding status + Children count + child profile + growth sensors
-- `device_action`: 17 device-specific automation actions
+- `device_action`: 18 device-specific automation actions
 
 **External Dependencies:**
-- `huckleberry-api>=0.1.10` - Firebase operations
+- `huckleberry-api>=0.1.14` - Firebase operations
 - `google-cloud-firestore>=2.11.0` - Required by huckleberry-api
 
 ### Integration Structure
@@ -254,7 +259,7 @@ Device actions appear in automation UI when selecting a device trigger/condition
 ### Growth Action (1)
 18. `log_growth` - Log growth measurements
 
-**Total**: 17 device actions
+**Total**: 18 device actions
 
 ## Critical Implementation Rules
 
@@ -778,8 +783,8 @@ except Exception as err:
   "dependencies": [],
   "documentation": "https://github.com/your-repo",
   "iot_class": "cloud_push",
-  "requirements": ["huckleberry-api>=0.1.10"],
-  "version": "0.1.11"
+  "requirements": ["huckleberry-api>=0.1.14"],
+  "version": "0.2.7"
 }
 ```
 
@@ -881,8 +886,9 @@ Follow [semver.org](https://semver.org/):
 
 ---
 
-**Last Updated**: December 4, 2025
-**Integration Version**: 0.1.11
+**Last Updated**: December 15, 2025
+**Integration Version**: 0.2.7
+**API Library Version**: 0.1.14
 **Status**: Stable, feature-complete for sleep, feeding, diaper, and growth tracking
 **Home Assistant Compatibility**: 2023.1+
-**Test Coverage**: Manual validation with live Huckleberry account
+**Test Coverage**: Automated test suite covering config flow, entities, services, and device actions
