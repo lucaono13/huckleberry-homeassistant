@@ -112,6 +112,11 @@ class HuckleberryChildProfileSensor(HuckleberryBaseEntity, SensorEntity):
         self._attr_unique_id = f"{self.child_uid}_profile"
 
     @property
+    def entity_picture(self) -> str | None:
+        """Return the entity picture to use in the frontend."""
+        return self._child.get("picture")
+
+    @property
     def native_value(self) -> str:
         """Return the child's name as the state."""
         return self.child_name
