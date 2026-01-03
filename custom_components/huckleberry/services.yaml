@@ -265,6 +265,8 @@ log_diaper_pee:
       description: Optional notes about this diaper change
       required: false
       example: Changed after feeding
+      selector:
+        text:
 
 log_diaper_poo:
   name: Log Diaper - Poo
@@ -333,6 +335,8 @@ log_diaper_poo:
       description: Optional notes about this diaper change
       required: false
       example: Changed after feeding
+      selector:
+        text:
 
 log_diaper_both:
   name: Log Diaper - Both
@@ -411,6 +415,8 @@ log_diaper_both:
       description: Optional notes about this diaper change
       required: false
       example: Changed after feeding
+      selector:
+        text:
 
 log_diaper_dry:
   name: Log Diaper - Dry Check
@@ -442,6 +448,8 @@ log_diaper_dry:
       description: Optional notes about this diaper check
       required: false
       example: Still dry after 2 hours
+      selector:
+        text:
 
 log_growth:
   name: Log Growth Measurements
