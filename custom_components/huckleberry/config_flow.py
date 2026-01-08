@@ -42,7 +42,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 api = HuckleberryAPI(
                     email=user_input[CONF_EMAIL],
                     password=user_input[CONF_PASSWORD],
-                    timezone=dt_util.DEFAULT_TIME_ZONE,
+                    timezone=dt_util.DEFAULT_TIME_ZONE.tzname(None),
                 )
 
                 await self.hass.async_add_executor_job(api.authenticate)
